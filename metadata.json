@@ -1,0 +1,6 @@
+{
+  "name": "EduSmart - Quản lý lớp học thông minh",
+  "description": "Hệ thống quản lý lớp học số thông minh toàn diện hỗ trợ 4 vai trò Admin, Giáo viên, Học sinh và Phụ huynh.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

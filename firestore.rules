@@ -1,0 +1,177 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================================
+    // HELPER FUNCTIONS & AUTHENTICATION ENFORCEMENT
+    // =========================================================================
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function isEmailAdmin() {
+      return isSignedIn() && request.auth.token.email == 'khanhannguyen0309@gmail.com';
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function userRole() {
+      return isSignedIn() ? getUserData().role : '';
+    }
+
+    function isAdmin() {
+      return isEmailAdmin() || (isSignedIn() && userRole() == 'admin');
+    }
+
+    function isTeacher() {
+      return isAdmin() || (isSignedIn() && userRole() == 'teacher');
+    }
+
+    function isSelf(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Default deny all unknown collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // =========================================================================
+    // USERS COLLECTION
+    // =========================================================================
+    match /users/{userId} {
+      // Authenticated users can read directory; users can update own profile; admin full access
+      allow read: if isSignedIn();
+      allow create: if isAdmin() || isSelf(userId);
+      allow update: if isAdmin() || (
+        isSelf(userId) &&
+        request.resource.data.role == resource.data.role // Cannot self-escalate role
+      );
+      allow delete: if isAdmin();
+    }
+
+    // =========================================================================
+    // CLASSES COLLECTION
+    // =========================================================================
+    match /classes/{classId} {
+      allow read: if isSignedIn();
+      allow create: if isTeacher();
+      allow update: if isTeacher();
+      allow delete: if isAdmin();
+    }
+
+    // =========================================================================
+    // STUDENTS COLLECTION
+    // =========================================================================
+    match /students/{studentId} {
+      allow read: if isSignedIn();
+      allow create: if isTeacher();
+      allow update: if isTeacher();
+      allow delete: if isAdmin();
+    }
+
+    // =========================================================================
+    // GUARDIANS COLLECTION
+    // =========================================================================
+    match /guardians/{guardianId} {
+      allow read: if isSignedIn();
+      allow create: if isTeacher();
+      allow update: if isTeacher() || (isSignedIn() && resource.data.profileId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    // =========================================================================
+    // ATTENDANCE COLLECTION
+    // =========================================================================
+    match /attendance/{attendanceId} {
+      allow read: if isSignedIn();
+      allow create: if isTeacher() &&
+        request.resource.data.classId is string &&
+        request.resource.data.date is string &&
+        request.resource.data.period is number &&
+        request.resource.data.studentId is string;
+      allow update: if isTeacher();
+      allow delete: if isAdmin();
+    }
+
+    // =========================================================================
+    // ASSIGNMENTS COLLECTION
+    // =========================================================================
+    match /assignments/{assignmentId} {
+      allow read: if isSignedIn();
+      allow create: if isTeacher() &&
+        request.resource.data.title is string &&
+        request.resource.data.maxScore is number;
+      allow update: if isTeacher();
+      allow delete: if isTeacher();
+    }
+
+    // =========================================================================
+    // SUBMISSIONS COLLECTION
+    // =========================================================================
+    match /submissions/{submissionId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isTeacher() || (isSignedIn() && resource.data.studentId == request.auth.uid);
+      allow delete: if isTeacher();
+    }
+
+    // =========================================================================
+    // QUESTION BANK COLLECTION
+    // =========================================================================
+    match /questions/{questionId} {
+      allow read: if isSignedIn();
+      allow create: if isTeacher() &&
+        request.resource.data.content is string &&
+        request.resource.data.correctAnswer is string;
+      allow update: if isTeacher();
+      allow delete: if isTeacher();
+    }
+
+    // =========================================================================
+    // DIGITAL MATERIALS COLLECTION
+    // =========================================================================
+    match /materials/{materialId} {
+      allow read: if isSignedIn();
+      allow create: if isTeacher() &&
+        request.resource.data.title is string;
+      allow update: if isTeacher();
+      allow delete: if isTeacher();
+    }
+
+    // =========================================================================
+    // ANNOUNCEMENTS COLLECTION
+    // =========================================================================
+    match /announcements/{announcementId} {
+      allow read: if isSignedIn();
+      allow create: if isTeacher() &&
+        request.resource.data.title is string &&
+        request.resource.data.content is string;
+      allow update: if isTeacher();
+      allow delete: if isTeacher();
+    }
+
+    // =========================================================================
+    // SMART ALERTS COLLECTION
+    // =========================================================================
+    match /smartAlerts/{alertId} {
+      allow read: if isSignedIn();
+      allow create: if isTeacher();
+      allow update: if isTeacher();
+      allow delete: if isTeacher();
+    }
+
+    // =========================================================================
+    // AUDIT LOGS COLLECTION
+    // =========================================================================
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn();
+      allow update: if false; // Append-only audit trail
+      allow delete: if false;
+    }
+  }
+}

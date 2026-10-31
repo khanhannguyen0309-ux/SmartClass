@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EduSmart Firebase Schema Blueprint",
+  "schemaVersion": "1.0.0",
+  "description": "Complete Firestore architecture and validation model for EduSmart Vietnamese Smart School Management System",
+  "entities": {
+    "users": {
+      "path": "users/{userId}",
+      "description": "User profile with role-based access controls and contact details",
+      "fields": {
+        "email": { "type": "string", "required": true },
+        "fullName": { "type": "string", "required": true },
+        "role": { "type": "string", "required": true, "enum": ["admin", "teacher", "student", "guardian"] },
+        "status": { "type": "string", "required": true, "enum": ["active", "suspended"] },
+        "phone": { "type": "string", "required": false },
+        "avatarUrl": { "type": "string", "required": false },
+        "createdAt": { "type": "string", "required": true }
+      }
+    },
+    "classes": {
+      "path": "classes/{classId}",
+      "description": "School classes managed by teachers and administrators",
+      "fields": {
+        "name": { "type": "string", "required": true },
+        "room": { "type": "string", "required": true },
+        "joinCode": { "type": "string", "required": true },
+        "homeroomTeacherId": { "type": "string", "required": true },
+        "studentCount": { "type": "number", "required": true },
+        "status": { "type": "string", "required": true, "enum": ["active", "archived"] },
+        "createdAt": { "type": "string", "required": true }
+      }
+    },
+    "students": {
+      "path": "students/{studentId}",
+      "description": "Enrolled student records linked to classes and guardians",
+      "fields": {
+        "studentCode": { "type": "string", "required": true },
+        "fullName": { "type": "string", "required": true },
+        "dateOfBirth": { "type": "string", "required": true },
+        "gender": { "type": "string", "required": true, "enum": ["Nam", "Nữ"] },
+        "classId": { "type": "string", "required": true },
+        "rollNumber": { "type": "number", "required": true },
+        "guardianName": { "type": "string", "required": false },
+        "guardianPhone": { "type": "string", "required": false },
+        "status": { "type": "string", "required": true, "enum": ["enrolled", "transferred", "graduated"] }
+      }
+    },
+    "guardians": {
+      "path": "guardians/{guardianId}",
+      "description": "Parent and guardian contact records with child associations",
+      "fields": {
+        "fullName": { "type": "string", "required": true },
+        "phone": { "type": "string", "required": true },
+        "email": { "type": "string", "required": false },
+        "relationship": { "type": "string", "required": true },
+        "children": { "type": "array", "required": true }
+      }
+    },
+    "attendance": {
+      "path": "attendance/{attendanceId}",
+      "description": "Daily roll call and attendance records for periods and school days",
+      "fields": {
+        "classId": { "type": "string", "required": true },
+        "date": { "type": "string", "required": true },
+        "period": { "type": "number", "required": true },
+        "studentId": { "type": "string", "required": true },
+        "studentName": { "type": "string", "required": true },
+        "status": { "type": "string", "required": true, "enum": ["present", "excused", "unexcused", "late", "left_early"] },
+        "reason": { "type": "string", "required": false },
+        "updatedBy": { "type": "string", "required": true },
+        "updatedAt": { "type": "string", "required": true }
+      }
+    },
+    "assignments": {
+      "path": "assignments/{assignmentId}",
+      "description": "Assignments, homework, and classroom quizzes created by teachers",
+      "fields": {
+        "classId": { "type": "string", "required": true },
+        "className": { "type": "string", "required": true },
+        "subjectId": { "type": "string", "required": true },
+        "subjectName": { "type": "string", "required": true },
+        "teacherId": { "type": "string", "required": true },
+        "title": { "type": "string", "required": true },
+        "description": { "type": "string", "required": true },
+        "dueDate": { "type": "string", "required": true },
+        "maxScore": { "type": "number", "required": true },
+        "status": { "type": "string", "required": true, "enum": ["draft", "published", "archived"] },
+        "createdAt": { "type": "string", "required": true }
+      }
+    },
+    "submissions": {
+      "path": "submissions/{submissionId}",
+      "description": "Student homework submissions with teacher grades and AI auto-grading feedback",
+      "fields": {
+        "assignmentId": { "type": "string", "required": true },
+        "studentId": { "type": "string", "required": true },
+        "studentName": { "type": "string", "required": true },
+        "studentCode": { "type": "string", "required": true },
+        "submittedAt": { "type": "string", "required": true },
+        "status": { "type": "string", "required": true, "enum": ["pending", "submitted", "graded", "late", "missing"] },
+        "score": { "type": "number", "required": false },
+        "feedback": { "type": "string", "required": false }
+      }
+    },
+    "questions": {
+      "path": "questions/{questionId}",
+      "description": "Question bank items categorized by subject, grade level, and cognitive difficulty",
+      "fields": {
+        "code": { "type": "string", "required": true },
+        "subject": { "type": "string", "required": true },
+        "grade": { "type": "string", "required": true },
+        "level": { "type": "string", "required": true },
+        "type": { "type": "string", "required": true },
+        "content": { "type": "string", "required": true },
+        "correctAnswer": { "type": "string", "required": true },
+        "explanation": { "type": "string", "required": false },
+        "createdBy": { "type": "string", "required": true },
+        "createdAt": { "type": "string", "required": true }
+      }
+    },
+    "materials": {
+      "path": "materials/{materialId}",
+      "description": "Digital learning materials, lesson plans, PDFs, and slide decks",
+      "fields": {
+        "title": { "type": "string", "required": true },
+        "subject": { "type": "string", "required": true },
+        "grade": { "type": "string", "required": true },
+        "format": { "type": "string", "required": true },
+        "author": { "type": "string", "required": true },
+        "downloads": { "type": "number", "required": true },
+        "views": { "type": "number", "required": true },
+        "uploadedAt": { "type": "string", "required": true }
+      }
+    },
+    "announcements": {
+      "path": "announcements/{announcementId}",
+      "description": "School-wide and classroom notices broadcast to parents and students",
+      "fields": {
+        "title": { "type": "string", "required": true },
+        "content": { "type": "string", "required": true },
+        "senderName": { "type": "string", "required": true },
+        "senderRole": { "type": "string", "required": true },
+        "priority": { "type": "string", "required": true, "enum": ["low", "medium", "high", "urgent"] },
+        "createdAt": { "type": "string", "required": true }
+      }
+    },
+    "smartAlerts": {
+      "path": "smartAlerts/{alertId}",
+      "description": "Early detection alerts for attendance anomalies and academic warnings",
+      "fields": {
+        "classId": { "type": "string", "required": true },
+        "studentId": { "type": "string", "required": true },
+        "type": { "type": "string", "required": true, "enum": ["low_grades", "absenteeism", "behavior"] },
+        "title": { "type": "string", "required": true },
+        "description": { "type": "string", "required": true },
+        "status": { "type": "string", "required": true, "enum": ["new", "viewed", "in_progress", "resolved"] },
+        "priority": { "type": "string", "required": true, "enum": ["low", "medium", "high", "urgent"] },
+        "createdAt": { "type": "string", "required": true }
+      }
+    }
+  },
+  "securityRulesSummary": "Implements fail-closed security rules with 8 pillars: explicit role-based access for admin, teacher, student, and guardian; data schema type validation; creator and ownership invariants; and emergency administrative override for khanhannguyen0309@gmail.com."
+}
